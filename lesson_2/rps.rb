@@ -1,6 +1,8 @@
 class RPSGame
   attr_accessor :human, :computer
 
+  MAX_SCORE = 5
+
   def initialize
     @human = Human.new
     @computer = Computer.new
@@ -14,7 +16,26 @@ class RPSGame
     puts "Thanks for playing Rock, Paper, Scissors. Good bye!"
   end
 
+  def calculate_score
+    if human.move > computer.move
+      human.score += 1
+    elsif human.move < computer.move
+      computer.score += 1
+    end
+  end
+
+  def display_scores
+    puts "- - - Score Board - - -"
+    puts "#{human.name} : #{human.score}, #{computer.name} : #{computer.score}"
+  end
+
+  def reset_score
+    human.score = 0
+    computer.score = 0
+  end
+
   def display_moves
+    puts ""
     puts "#{human.name} chose #{human.move}."
     puts "#{computer.name} chose #{computer.move}."
   end
@@ -29,13 +50,29 @@ class RPSGame
     end
   end
 
+  def display_grand_winner
+    if human.score == MAX_SCORE
+      puts "*** The grand winner is #{human.name}! ***"
+    elsif computer.score == MAX_SCORE
+      puts "*** The grand winner is #{computer.name}! ***"
+    end
+  end
+
+  def round
+    human.choose
+    computer.choose
+    display_moves
+    display_winner
+    calculate_score
+    display_scores
+  end
+
   def play
     display_welcome_message
     loop do
-      human.choose
-      computer.choose
-      display_moves
-      display_winner
+      round until human.score == MAX_SCORE || computer.score == MAX_SCORE
+      display_grand_winner
+      reset_score
       break unless play_again?
     end
     display_goodbye_message
@@ -90,10 +127,11 @@ class Move
 end
 
 class Player
-  attr_accessor :move, :name
+  attr_accessor :move, :name, :score
 
   def initialize
     set_name
+    @score = 0
   end
 end
 
