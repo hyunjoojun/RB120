@@ -1,3 +1,5 @@
+require 'pry'
+
 class RPSGame
   attr_accessor :human, :computer
 
@@ -9,11 +11,58 @@ class RPSGame
   end
 
   def display_welcome_message
-    puts "Welcome to Rock, Paper, Scissors!"
+    puts "Hi #{human.name}! Welcome to Rock, Paper, Scissors!"
+    puts "The first one to score #{MAX_SCORE} will be the grand winner!"
   end
 
   def display_goodbye_message
     puts "Thanks for playing Rock, Paper, Scissors. Good bye!"
+  end
+
+  def display_grand_winner
+    if human.score == MAX_SCORE
+      puts "*** The grand winner is #{human.name}! ***"
+    elsif computer.score == MAX_SCORE
+      puts "*** The grand winner is #{computer.name}! ***"
+    end
+  end
+
+  def reset_score
+    human.score = 0
+    computer.score = 0
+  end
+
+  def play
+    display_welcome_message
+    loop do
+      until human.score == MAX_SCORE || computer.score == MAX_SCORE
+        Round.new(@human, @computer).start
+      end
+      display_grand_winner
+      reset_score
+      break unless play_again?
+    end
+    display_goodbye_message
+  end
+
+  def play_again?
+    answer = nil
+    loop do
+      puts "Would you like to play again? (y/n)"
+      answer = gets.chomp
+      break if ['y', 'n'].include?(answer.downcase)
+      puts "Sorry, must be y or n."
+    end
+    answer.downcase == 'y'
+  end
+end
+
+class Round
+  attr_reader :human, :computer
+
+  def initialize(human, computer)
+    @human = human
+    @computer = computer
   end
 
   def calculate_score
@@ -27,11 +76,6 @@ class RPSGame
   def display_scores
     puts "- - - Score Board - - -"
     puts "#{human.name} : #{human.score}, #{computer.name} : #{computer.score}"
-  end
-
-  def reset_score
-    human.score = 0
-    computer.score = 0
   end
 
   def display_moves
@@ -50,43 +94,13 @@ class RPSGame
     end
   end
 
-  def display_grand_winner
-    if human.score == MAX_SCORE
-      puts "*** The grand winner is #{human.name}! ***"
-    elsif computer.score == MAX_SCORE
-      puts "*** The grand winner is #{computer.name}! ***"
-    end
-  end
-
-  def round
+  def start
     human.choose
     computer.choose
     display_moves
     display_winner
     calculate_score
     display_scores
-  end
-
-  def play
-    display_welcome_message
-    loop do
-      round until human.score == MAX_SCORE || computer.score == MAX_SCORE
-      display_grand_winner
-      reset_score
-      break unless play_again?
-    end
-    display_goodbye_message
-  end
-
-  def play_again?
-    answer = nil
-    loop do
-      puts "Would you like to play again? (y/n)"
-      answer = gets.chomp
-      break if ['y', 'n'].include?(answer.downcase)
-      puts "Sorry, must be y or n."
-    end
-    answer.downcase == 'y'
   end
 end
 
