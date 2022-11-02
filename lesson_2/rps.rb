@@ -1,19 +1,19 @@
 require 'pry'
 
 class RPSGame
-  attr_accessor :human, :computer, :rounds
+  attr_accessor :human, :computer
 
-  MAX_SCORE = 5
+  MAX_SCORE = 10
 
   def initialize
     @human = Human.new
     @computer = Computer.new
-    @rounds = []
   end
 
   def display_welcome_message
-    puts "Hi #{human.name}! Welcome to Rock, Paper, Scissors, Lizard, Spock!"
-    puts "The first one to score #{MAX_SCORE} will be the grand winner!"
+    puts "Hello #{human.name}! Welcome to Rock, Paper, Scissors, Lizard, Spock!"
+    puts "You will be competing with #{computer.name}."
+    puts "The first one to score #{MAX_SCORE} will be the grand winner."
   end
 
   def display_goodbye_message
@@ -37,9 +37,7 @@ class RPSGame
     display_welcome_message
     loop do
       until human.score == MAX_SCORE || computer.score == MAX_SCORE
-        round = Round.new(@human, @computer)
-        round.start
-        @rounds << round
+        Round.new(@human, @computer).start
       end
       display_grand_winner
       reset_score
@@ -180,4 +178,5 @@ class Computer < Player
   end
 end
 
+system 'clear'
 RPSGame.new.play
