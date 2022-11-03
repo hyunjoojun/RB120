@@ -10,10 +10,10 @@ class RPSGame
   end
 
   def display_welcome_message
-    puts "Hello #{human.name}! Welcome to Rock, Paper, Scissors, Lizard, Spock!"
-    puts "You will be playing against #{computer.name}."
-    puts "The first one to score #{MAX_SCORE} will be the grand winner."
-    puts "Detailed rules can be found here: http://www.samkass.com/theories/RPSSL.html"
+    puts "Hello #{human.name}! Welcome to Rock, Paper, Scissors, Lizard, Spock!
+    \n => You will be playing against #{computer.name}.
+    The first one to score #{MAX_SCORE} will be the grand winner.
+    Detailed rules can be found here: http://www.samkass.com/theories/RPSSL.html"
   end
 
   def display_goodbye_message
@@ -115,9 +115,9 @@ class Round
   end
 
   def display_scores
-    puts "---- Score Board ----"
-    puts "#{human.name} : #{human.score}, #{computer.name} : #{computer.score}"
-    puts "---------------------"
+    puts "\n    ----- Score Board -----
+    #{human.name} : #{human.score}, #{computer.name} : #{computer.score}
+    -----------------------"
   end
 
   def display_moves
@@ -187,7 +187,7 @@ class Human < Player
   def choose
     choice = nil
     loop do
-      puts "Please choose one:
+      puts "\n => Please choose one:
       rock(r), paper(p), scissors(s), lizard(l), spock(k):"
       choice = gets.chomp.downcase
       break if Move::SHORTCUTS.include?(choice)
