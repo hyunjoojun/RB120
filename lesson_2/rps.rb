@@ -3,7 +3,7 @@ require 'pry'
 class RPSGame
   attr_accessor :human, :computer, :rounds
 
-  MAX_SCORE = 2
+  MAX_SCORE = 5
 
   def initialize
     @human = Human.new
@@ -23,9 +23,11 @@ class RPSGame
 
   def display_grand_winner
     if human.score == MAX_SCORE
-      puts "*** The grand winner is #{human.name}! ***"
+      puts "\n *** The grand winner is #{human.name}! ***"
+      puts ''
     elsif computer.score == MAX_SCORE
-      puts "*** The grand winner is #{computer.name}! ***"
+      puts "\n *** The grand winner is #{computer.name}! ***"
+      puts ''
     end
   end
 
@@ -36,15 +38,19 @@ class RPSGame
 
   def display_game_history
     @rounds.each_with_index do |round, idx|
-      puts "Round #{idx+1}: #{human.name} threw #{round.human_move}"
+      puts "Round #{idx + 1}: #{human.name} threw #{round.human_move}"
       puts "          #{computer.name} threw #{round.computer_move}"
     end
+  end
+
+  def game_over?
+    human.score == MAX_SCORE || computer.score == MAX_SCORE
   end
 
   def play
     display_welcome_message
     loop do
-      until human.score == MAX_SCORE || computer.score == MAX_SCORE
+      until game_over?
         round = Round.new(@human, @computer)
         round.start
         @rounds << round
@@ -89,40 +95,40 @@ class Round
     @computer_move = nil
   end
 
-  def determine_winning_hand
-    choice1 = Move::VALUES.index(human.move.value)
-    choice2 = Move::VALUES.index(computer.move.value)
-    @winning_hand = WIN_MATRIX[choice1][choice2]
-  end
-
   def store_moves
     @human_move = human.move.value
     @computer_move = computer.move.value
   end
 
+  def determine_winning_hand
+    row = Move::VALUES.index(human_move)
+    column = Move::VALUES.index(computer_move)
+    @winning_hand = WIN_MATRIX[row][column]
+  end
+
   def calculate_score
-    if human.move.value == @winning_hand
+    if human_move == @winning_hand
       human.score += 1
-    elsif computer.move.value == @winning_hand
+    elsif computer_move == @winning_hand
       computer.score += 1
     end
   end
 
   def display_scores
-    puts "- - - Score Board - - -"
+    puts "---- Score Board ----"
     puts "#{human.name} : #{human.score}, #{computer.name} : #{computer.score}"
+    puts "---------------------"
   end
 
   def display_moves
-    puts ""
     puts "#{human.name} chose #{human_move}."
     puts "#{computer.name} chose #{computer_move}."
   end
 
   def display_winner
-    if human.move.value == @winning_hand
+    if human_move == @winning_hand
       puts "#{human.name} won!"
-    elsif computer.move.value == @winning_hand
+    elsif computer_move == @winning_hand
       puts "#{computer.name} won!"
     else
       puts "It's a tie!"
@@ -133,6 +139,7 @@ class Round
     human.choose
     computer.choose
     store_moves
+    system 'clear'
     display_moves
     determine_winning_hand
     display_winner
@@ -145,6 +152,7 @@ class Move
   attr_accessor :value
 
   VALUES = ['rock', 'paper', 'scissors', 'lizard', 'spock']
+  SHORTCUTS = ['r', 'p', 's', 'l', 'k']
 
   def initialize(value)
     @value = value
@@ -169,7 +177,7 @@ class Human < Player
     n = ''
     loop do
       puts "What's your name?"
-      n = gets.chomp
+      n = gets.chomp.strip
       break unless n.empty?
       puts "Sorry, must enter a value."
     end
@@ -179,12 +187,13 @@ class Human < Player
   def choose
     choice = nil
     loop do
-      puts "Please choose rock, paper, scissors, lizard, or spock:"
-      choice = gets.chomp
-      break if Move::VALUES.include?(choice)
+      puts "Please choose one: rock(r), paper(p),
+            scissors(s), lizard(l), spock(k):"
+      choice = gets.chomp.downcase
+      break if Move::SHORTCUTS.include?(choice)
       puts "Sorry, invalid choice."
     end
-    self.move = Move.new(choice)
+    self.move = Move.new(Move::VALUES[Move::SHORTCUTS.index(choice)])
   end
 end
 
