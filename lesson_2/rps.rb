@@ -1,18 +1,19 @@
 require 'pry'
 
 class RPSGame
-  attr_accessor :human, :computer
+  attr_accessor :human, :computer, :rounds
 
-  MAX_SCORE = 10
+  MAX_SCORE = 2
 
   def initialize
     @human = Human.new
     @computer = Computer.new
+    @rounds = []
   end
 
   def display_welcome_message
     puts "Hello #{human.name}! Welcome to Rock, Paper, Scissors, Lizard, Spock!"
-    puts "You will be competing with #{computer.name}."
+    puts "You will be playing against #{computer.name}."
     puts "The first one to score #{MAX_SCORE} will be the grand winner."
   end
 
@@ -33,13 +34,23 @@ class RPSGame
     computer.score = 0
   end
 
+  def display_game_history
+    @rounds.each_with_index do |round, idx|
+      puts "Round #{idx+1}: #{human.name} threw #{round.human_move}"
+      puts "          #{computer.name} threw #{round.computer_move}"
+    end
+  end
+
   def play
     display_welcome_message
     loop do
       until human.score == MAX_SCORE || computer.score == MAX_SCORE
-        Round.new(@human, @computer).start
+        round = Round.new(@human, @computer)
+        round.start
+        @rounds << round
       end
       display_grand_winner
+      display_game_history
       reset_score
       break unless play_again?
     end
@@ -59,8 +70,9 @@ class RPSGame
 end
 
 class Round
-  attr_reader :human, :computer
+  attr_reader :human, :computer, :human_move, :computer_move
 
+  # rock = 0, paper = 1, scissors = 2, lizard = 3, spock = 4
   WIN_MATRIX = [
     %w(tie paper rock rock spock),
     %w(paper tie scissors lizard paper),
@@ -73,12 +85,19 @@ class Round
     @human = human
     @computer = computer
     @winning_hand = nil
+    @human_move = nil
+    @computer_move = nil
   end
 
-  def determine_winner
-    index1 = Move::VALUES.index(human.move.value)
-    index2 = Move::VALUES.index(computer.move.value)
-    @winning_hand = WIN_MATRIX[index1][index2]
+  def determine_winning_hand
+    choice1 = Move::VALUES.index(human.move.value)
+    choice2 = Move::VALUES.index(computer.move.value)
+    @winning_hand = WIN_MATRIX[choice1][choice2]
+  end
+
+  def store_moves
+    @human_move = human.move.value
+    @computer_move = computer.move.value
   end
 
   def calculate_score
@@ -96,8 +115,8 @@ class Round
 
   def display_moves
     puts ""
-    puts "#{human.name} chose #{human.move}."
-    puts "#{computer.name} chose #{computer.move}."
+    puts "#{human.name} chose #{human_move}."
+    puts "#{computer.name} chose #{computer_move}."
   end
 
   def display_winner
@@ -113,8 +132,9 @@ class Round
   def start
     human.choose
     computer.choose
+    store_moves
     display_moves
-    determine_winner
+    determine_winning_hand
     display_winner
     calculate_score
     display_scores
@@ -122,7 +142,7 @@ class Round
 end
 
 class Move
-  attr_reader :value
+  attr_accessor :value
 
   VALUES = ['rock', 'paper', 'scissors', 'lizard', 'spock']
 
