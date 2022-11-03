@@ -1,9 +1,7 @@
-require 'pry'
-
 class RPSGame
   attr_accessor :human, :computer, :rounds
 
-  MAX_SCORE = 5
+  MAX_SCORE = 3
 
   def initialize
     @human = Human.new
@@ -15,6 +13,7 @@ class RPSGame
     puts "Hello #{human.name}! Welcome to Rock, Paper, Scissors, Lizard, Spock!"
     puts "You will be playing against #{computer.name}."
     puts "The first one to score #{MAX_SCORE} will be the grand winner."
+    puts "Detailed rules can be found here: http://www.samkass.com/theories/RPSSL.html"
   end
 
   def display_goodbye_message
@@ -22,13 +21,12 @@ class RPSGame
   end
 
   def display_grand_winner
-    if human.score == MAX_SCORE
+    if human.score > computer.score
       puts "\n *** The grand winner is #{human.name}! ***"
-      puts ''
-    elsif computer.score == MAX_SCORE
+    else
       puts "\n *** The grand winner is #{computer.name}! ***"
-      puts ''
     end
+    puts ' '
   end
 
   def reset_score
@@ -37,9 +35,10 @@ class RPSGame
   end
 
   def display_game_history
+    puts "Game history..."
     @rounds.each_with_index do |round, idx|
-      puts "Round #{idx + 1}: #{human.name} threw #{round.human_move}"
-      puts "          #{computer.name} threw #{round.computer_move}"
+      puts "Round #{idx + 1}: #{human.name} threw #{round.human_move},
+          #{computer.name} threw #{round.computer_move}"
     end
   end
 
@@ -71,6 +70,7 @@ class RPSGame
       break if ['y', 'n'].include?(answer.downcase)
       puts "Sorry, must be y or n."
     end
+    system 'clear'
     answer.downcase == 'y'
   end
 end
@@ -181,14 +181,14 @@ class Human < Player
       break unless n.empty?
       puts "Sorry, must enter a value."
     end
-    self.name = n
+    self.name = n.capitalize
   end
 
   def choose
     choice = nil
     loop do
-      puts "Please choose one: rock(r), paper(p),
-            scissors(s), lizard(l), spock(k):"
+      puts "Please choose one:
+      rock(r), paper(p), scissors(s), lizard(l), spock(k):"
       choice = gets.chomp.downcase
       break if Move::SHORTCUTS.include?(choice)
       puts "Sorry, invalid choice."
