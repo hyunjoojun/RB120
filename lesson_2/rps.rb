@@ -3,7 +3,7 @@ require 'pry'
 class RPSGame
   attr_accessor :human, :computer, :rounds
 
-  MAX_SCORE = 3
+  MAX_SCORE = 5
 
   def initialize
     @human = Human.new
@@ -78,7 +78,7 @@ class RPSGame
 end
 
 class Round
-  attr_accessor :human, :computer, :human_move, :computer_move
+  attr_reader :human, :computer, :human_move, :computer_move
 
   WIN_MATRIX = [
     %w(tie paper rock rock spock),
@@ -88,7 +88,7 @@ class Round
     %w(spock paper spock lizard tie)
   ]
 
-  MAP = ['rock', 'paper', 'scissors', 'lizard', 'spock']
+  MAP = %w(rock paper scissors lizard spock)
 
   def initialize(human, computer)
     @human = human
@@ -146,11 +146,11 @@ class Move
   attr_accessor :value
 
   CHOICES = {
-    r: "rock",
-    p: "paper",
-    s: "scissors",
-    l: "lizard",
-    k: "spock"
+    r: 'rock',
+    p: 'paper',
+    s: 'scissors',
+    l: 'lizard',
+    k: 'spock'
   }
 
   def initialize(value)
@@ -166,12 +166,16 @@ class Player
   attr_accessor :move, :name, :score
 
   def initialize
-    set_name
     @score = 0
   end
 end
 
 class Human < Player
+  def initialize
+    super
+    set_name
+  end
+
   def set_name
     n = ''
     loop do
@@ -196,13 +200,55 @@ class Human < Player
   end
 end
 
+class RockLovingPlayer < Player
+  def choose
+    Move.new(%w(r r r r r p s l k).sample)
+  end
+end
+
+class ScissorsLovingPlayer < Player
+  def choose
+    Move.new(%w(r p s s s s s l k).sample)
+  end
+end
+
+class PaperLovingPlayer < Player
+  def choose
+    Move.new(%w(r p p p p p s l k).sample)
+  end
+end
+
+class EquallyLovingPlayer < Player
+  def choose
+    Move.new(Move::CHOICES.keys.sample)
+  end
+end
+
+class LizardSpockOnlyPlayer < Player
+  def choose
+    Move.new(%w(l k).sample)
+  end
+end
+
 class Computer < Player
-  def set_name
-    self.name = ['R2D2', 'Hal', 'Chappie', 'Sonny', 'Number 5'].sample
+  attr_reader :name
+
+  PLAYER_CLASSES = {
+    'R2D2': ::RockLovingPlayer,
+    'Hal': ::ScissorsLovingPlayer,
+    'Chappie': ::PaperLovingPlayer,
+    'Sonny': ::EquallyLovingPlayer,
+    'Number 5': ::LizardSpockOnlyPlayer
+  }
+
+  def initialize
+    @name = ['Number 5'].sample
+    @internal_player = PLAYER_CLASSES[@name.to_sym].new
+    super
   end
 
   def choose
-    self.move = Move.new(Move::CHOICES.keys.sample)
+    self.move = @internal_player.choose
   end
 end
 
