@@ -1,5 +1,3 @@
-require 'pry'
-
 class RPSGame
   attr_accessor :human, :computer, :rounds
 
@@ -36,28 +34,36 @@ class RPSGame
     computer.score = 0
   end
 
+  # rubocop:disable Layout/LineLength
   def display_game_history
     puts "Game history..."
     @rounds.each_with_index do |round, idx|
-      puts "Round #{idx + 1}: #{human.name} threw #{round.human_move},
-         #{computer.name} threw #{round.computer_move}."
+      puts "Round #{idx + 1} => #{human.name}: #{round.human_move}, #{computer.name}: #{round.computer_move}"
+      if round.winner.nil?
+        puts " . . . Tied Round"
+      else
+        puts " . . . Winner: #{round.winner}"
+      end
     end
   end
+  # rubocop:enable Layout/LineLength
 
   def game_over?
     human.score == MAX_SCORE || computer.score == MAX_SCORE
   end
 
+  def start_round
+    round = Round.new(@human, @computer)
+    round.start
+    @rounds << round
+  end
+
   def play
     display_welcome_message
     loop do
-      until game_over?
-        round = Round.new(@human, @computer)
-        round.start
-        @rounds << round
-      end
-      display_grand_winner
+      start_round until game_over?
       display_game_history
+      display_grand_winner
       reset_score
       break unless play_again?
     end
@@ -78,7 +84,7 @@ class RPSGame
 end
 
 class Round
-  attr_reader :human, :computer, :human_move, :computer_move
+  attr_reader :human, :computer, :human_move, :computer_move, :winner
 
   WIN_MATRIX = [
     %w(tie paper rock rock spock),
@@ -101,10 +107,18 @@ class Round
     @winning_hand = WIN_MATRIX[row][column]
   end
 
+  def determine_winner
+    @winner = if human_move.value == @winning_hand
+                human.name
+              elsif computer_move.value == @winning_hand
+                computer.name
+              end
+  end
+
   def calculate_score
-    if human_move.value == @winning_hand
+    if @winner == human.name
       human.score += 1
-    elsif computer_move.value == @winning_hand
+    elsif @winner == computer.name
       computer.score += 1
     end
   end
@@ -116,14 +130,15 @@ class Round
   end
 
   def display_moves
+    system 'clear'
     puts "#{human.name} chose #{human_move}."
     puts "#{computer.name} chose #{computer_move}."
   end
 
   def display_winner
-    if human_move.value == @winning_hand
+    if @winner == human.name
       puts "#{human.name} won!"
-    elsif computer_move.value == @winning_hand
+    elsif @winner == computer.name
       puts "#{computer.name} won!"
     else
       puts "It's a tie!"
@@ -133,9 +148,9 @@ class Round
   def start
     @human_move = human.choose
     @computer_move = computer.choose
-    system 'clear'
     display_moves
     determine_winning_hand
+    determine_winner
     display_winner
     calculate_score
     display_scores
@@ -242,7 +257,7 @@ class Computer < Player
   }
 
   def initialize
-    @name = ['Number 5'].sample
+    @name = ['R2D2', 'Hal', 'Chappie', 'Sonny', 'Number 5'].sample
     @internal_player = PLAYER_CLASSES[@name.to_sym].new
     super
   end
