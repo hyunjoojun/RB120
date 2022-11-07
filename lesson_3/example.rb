@@ -9,19 +9,19 @@
 # bob = Person.new
 # p bob.get_name
 
-module ElizabethanEra
-  GREETINGS = ['How dost thou', 'Bless thee', 'Good morrow']
+class Computer
+  GREETINGS = ["Beep", "Boop"]
+end
 
-  class Person
-    def self.greetings
-      GREETINGS.join(', ')
-    end
+class Person
+  def self.greetings
+    Computer::GREETINGS.join(', ')
+  end
 
-    def greet
-      GREETINGS.sample
-    end
+  def greet
+    Computer::GREETINGS.sample
   end
 end
 
-puts ElizabethanEra::Person.greetings # => "How dost thou, Bless thee, Good morrow"
-puts ElizabethanEra::Person.new.greet # => "Bless thee" (output may vary)
+puts Person.greetings
+puts Person.new.greet
