@@ -87,9 +87,11 @@ end
 
 class Player
   attr_reader :marker
+  attr_accessor :score
 
   def initialize(marker)
     @marker = marker
+    @score = 0
   end
 end
 
@@ -97,6 +99,7 @@ class TTTGame
   HUMAN_MARKER = 'X'
   COMPUTER_MARKER = 'O'
   FIRST_TO_MOVE = HUMAN_MARKER
+  MAX_SCORE = 5
 
   attr_reader :board, :human, :computer
 
@@ -108,9 +111,26 @@ class TTTGame
   end
 
   def player_move
-    current_player_moves
-    break if board.someone_won? || board.full?
-    clear_screen_and_display_board if human_turn?
+    loop do
+      current_player_moves
+      break if board.someone_won? || board.full?
+      clear_screen_and_display_board if human_turn?
+    end
+  end
+
+  def update_score
+    case board.winning_marker
+    when human.marker
+      human.score += 1
+    when computer.marker
+      computer.score += 1
+    end
+  end
+
+  def display_score
+    puts '- - - Score Board - - -'
+    puts "Player: #{human.score}, Computer: #{computer.score}"
+    puts '- - - - - - - - - - - -'
   end
 
   def main_game
@@ -118,6 +138,8 @@ class TTTGame
       display_board
       player_move
       display_result
+      update_score
+      display_score
       break unless play_again?
       reset
       display_play_again_message
@@ -154,8 +176,19 @@ class TTTGame
     display_board
   end
 
+  def joinor(arr, delimiter=', ', word='or')
+    case arr.size
+    when 0 then ''
+    when 1 then arr.first.to_s
+    when 2 then arr.join(" #{word} ")
+    else
+      arr[-1] = "#{word} #{arr.last}"
+      arr.join(delimiter)
+    end
+  end
+
   def human_moves
-    puts "Choose a square between (#{board.unmarked_keys.join(', ')}):"
+    puts "Choose a square between (#{joinor(board.unmarked_keys)}):"
     square = nil
     loop do
       square = gets.chomp.to_i
