@@ -110,6 +110,28 @@ class TTTGame
     @current_marker = FIRST_TO_MOVE
   end
 
+  def main_game
+    loop do
+      display_board
+      player_move
+      display_result
+      update_score
+      display_score
+      break unless play_again?
+      reset
+      display_play_again_message
+    end
+  end
+
+  def play
+    clear
+    display_welcome_message
+    main_game
+    display_goodbye_message
+  end
+
+  private
+
   def player_move
     loop do
       current_player_moves
@@ -132,28 +154,6 @@ class TTTGame
     puts "Player: #{human.score}, Computer: #{computer.score}"
     puts '- - - - - - - - - - - -'
   end
-
-  def main_game
-    loop do
-      display_board
-      player_move
-      display_result
-      update_score
-      display_score
-      break unless play_again?
-      reset
-      display_play_again_message
-    end
-  end
-
-  def play
-    clear
-    display_welcome_message
-    main_game
-    display_goodbye_message
-  end
-
-  private
 
   def display_welcome_message
     puts 'Welcome to Tic Tac Toe!'
@@ -186,6 +186,17 @@ class TTTGame
       arr.join(delimiter)
     end
   end
+
+  # def choose_marker
+  #   puts "Choose a marker: O or X"
+  #   choice = nil
+  #   loop do
+  #     choice = gets.chomp.upcase
+  #     break if %w(O X).include?(choice)
+  #     puts "Sorry, please enter O or X."
+  #   end
+  #   human.marker = choice
+  # end
 
   def human_moves
     puts "Choose a square between (#{joinor(board.unmarked_keys)}):"
