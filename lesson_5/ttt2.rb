@@ -22,12 +22,48 @@ class Square
 end
 
 class Player
-  def initialize
+  attr_accessor :score, :name, :marker
+end
 
+class HumanPlayer < Player
+  def initialize
+    ask_user_for_name
+    ask_user_to_choose_marker
+    @score = 0
   end
 
-  def marker
+  def ask_user_for_name
+    player_name = ''
+    loop do
+      puts "What's your name?"
+      player_name = gets.chomp.strip
+      break unless player_name.empty?
+      puts "Sorry, must enter a value."
+    end
+    self.name = player_name.capitalize
+  end
 
+  def ask_user_to_choose_marker
+    marker_choice = ''
+    loop do
+      puts "Please choose your marker: O or X"
+      marker_choice = gets.chomp.strip.upcase
+      break if %w(O X).include? marker_choice
+      puts "Sorry, must be O or X."
+    end
+    self.marker = marker_choice
+  end
+end
+
+class ComputerPlayer < Player
+  def initialize
+    @score = 0
+    @name = ['T-1000', 'Oreo', 'Wall-E', 'K9', 'BoyBot'].sample
+    @marker = choose_marker
+  end
+
+  def choose_marker
+    self.marker = human.marker == 'O' ? 'X' : 'O'
   end
 end
 
