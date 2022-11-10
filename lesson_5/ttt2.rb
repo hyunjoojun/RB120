@@ -21,11 +21,9 @@ class Square
   end
 end
 
-class Player
+class HumanPlayer
   attr_accessor :score, :name, :marker
-end
 
-class HumanPlayer < Player
   def initialize
     ask_user_for_name
     ask_user_to_choose_marker

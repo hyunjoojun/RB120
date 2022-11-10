@@ -1,3 +1,5 @@
+require 'pry'
+
 module Displayable
   def clear
     system 'clear'
@@ -5,6 +7,11 @@ module Displayable
 
   def empty_line
     puts ''
+  end
+
+  def continue
+    puts "Press enter to continue\r"
+    gets
   end
 end
 
@@ -95,13 +102,45 @@ class Square
   end
 end
 
-class Player
-  attr_reader :marker
-  attr_accessor :score
+class HumanPlayer
+  attr_accessor :score, :name, :marker
 
-  def initialize(marker)
-    @marker = marker
+  def initialize
+    ask_user_for_name
+    ask_user_to_choose_marker
     @score = 0
+  end
+
+  def ask_user_for_name
+    player_name = ''
+    loop do
+      puts "What's your name?"
+      player_name = gets.chomp.strip
+      break unless player_name.empty?
+      puts "Sorry, must enter a value."
+    end
+    self.name = player_name.capitalize
+  end
+
+  def ask_user_to_choose_marker
+    marker_choice = ''
+    loop do
+      puts "Please choose your marker: (Except O)"
+      marker_choice = gets.chomp.strip.upcase
+      break if marker_choice.size == 1 && marker_choice != 'O'
+      puts "Sorry, Invalid choice."
+    end
+    self.marker = marker_choice
+  end
+end
+
+class ComputerPlayer
+  attr_accessor :score, :name, :marker
+
+  def initialize
+    @score = 0
+    @name = ['T-1000', 'Oreo', 'Wall-E', 'K9', 'BoyBot'].sample
+    @marker = 'O'
   end
 end
 
@@ -110,7 +149,7 @@ class Round
 
   attr_accessor :board, :human, :computer, :current_marker
 
-  FIRST_TO_MOVE = 'X'
+  FIRST_TO_MOVE = 'O'
 
   def initialize(human, computer)
     @board = Board.new
@@ -120,7 +159,7 @@ class Round
   end
 
   def display_board
-    puts "You're a #{human.marker}. Computer is a #{computer.marker}."
+    puts "#{human.name}: #{human.marker}, #{computer.name}: #{computer.marker}"
     empty_line
     board.draw
     empty_line
@@ -144,9 +183,9 @@ class Round
   end
 
   def display_score
-    puts '- - - Score Board - - -'
-    puts "Player: #{human.score}, Computer: #{computer.score}"
-    puts '- - - - - - - - - - - -'
+    puts '- - Score Board - -'
+    puts "#{human.name}: #{human.score}, #{computer.name}: #{computer.score}"
+    puts '- - - - - - - - - -'
   end
 
   def joinor(arr, delimiter=', ', word='or')
@@ -177,17 +216,17 @@ class Round
   end
 
   def current_player_moves
-    if @current_marker == TTTGame::HUMAN_MARKER
+    if @current_marker == human.marker
       human_moves
-      @current_marker = TTTGame::COMPUTER_MARKER
+      @current_marker = computer.marker
     else
       computer_moves
-      @current_marker = TTTGame::HUMAN_MARKER
+      @current_marker = human.marker
     end
   end
 
   def human_turn?
-    @current_marker == TTTGame::HUMAN_MARKER
+    @current_marker == human.marker
   end
 
   def display_result
@@ -195,9 +234,9 @@ class Round
 
     case board.winning_marker
     when human.marker
-      puts 'You won!'
+      puts "#{human.name} won!"
     when computer.marker
-      puts 'Computer won!'
+      puts "#{computer.name} won!"
     else
       puts "It's a tie!"
     end
@@ -214,11 +253,6 @@ class Round
     display_board
   end
 
-  def continue
-    puts "Press enter to continue\r"
-    gets
-  end
-
   def start
     display_board
     player_move
@@ -233,27 +267,33 @@ end
 class TTTGame
   include Displayable
 
-  HUMAN_MARKER = 'X'
-  COMPUTER_MARKER = 'O'
-  MAX_SCORE = 5
+  MAX_SCORE = 2
 
-  attr_accessor :rounds, :human, :computer
+  attr_accessor :human, :computer
 
   def initialize
-    @human = Player.new(HUMAN_MARKER)
-    @computer = Player.new(COMPUTER_MARKER)
-    @rounds = []
+    @human = HumanPlayer.new
+    @computer = ComputerPlayer.new
   end
 
   def start_round
     round = Round.new(@human, @computer)
     round.start
-    @rounds << round
+  end
+
+  def game_over?
+    human.score == MAX_SCORE || computer.score == MAX_SCORE
+  end
+
+  def reset_score
+    human.score = 0
+    computer.score = 0
   end
 
   def main_game
     loop do
-      start_round
+      start_round until game_over?
+      reset_score
       break unless play_again?
       display_play_again_message
     end
@@ -262,6 +302,7 @@ class TTTGame
   def play
     clear
     display_welcome_message
+    continue
     main_game
     display_goodbye_message
   end
@@ -269,24 +310,15 @@ class TTTGame
   private
 
   def display_welcome_message
-    puts 'Welcome to Tic Tac Toe!'
+    puts "Hello #{human.name}! Welcome to Tic Tac Toe!
+    \n => You will be playing against #{computer.name}.
+    First player to win #{MAX_SCORE} rounds wins the game!"
     empty_line
   end
 
   def display_goodbye_message
     puts 'Thanks for playing Tic Tac Toe! Goodbye!'
   end
-
-  # def choose_marker
-  #   puts "Choose a marker: O or X"
-  #   choice = nil
-  #   loop do
-  #     choice = gets.chomp.upcase
-  #     break if %w(O X).include?(choice)
-  #     puts "Sorry, please enter O or X."
-  #   end
-  #   human.marker = choice
-  # end
 
   def play_again?
     answer = nil
