@@ -162,29 +162,11 @@ class Round
   include Displayable
   attr_accessor :board, :human, :computer, :current_marker
 
-  def initialize(human, computer)
+  def initialize(human, computer, current_marker)
     @board = Board.new
     @human = human
     @computer = computer
-  end
-
-  def ask_user_for_turn
-    answer = ''
-    loop do
-      puts "Do you want to go first? (y or n)"
-      answer = gets.chomp.downcase
-      break if %w(y n).include?(answer)
-      puts "Sorry, must enter y or n."
-    end
-    who_goes_first(answer)
-  end
-
-  def who_goes_first(user_answer)
-    @current_marker = if user_answer == 'y'
-                        human.marker
-                      else
-                        computer.marker
-                      end
+    @current_marker = current_marker
   end
 
   def display_board
@@ -282,7 +264,6 @@ class Round
   end
 
   def start
-    ask_user_for_turn
     display_board
     player_move
     display_result
@@ -296,15 +277,24 @@ end
 class TTTGame
   include Displayable
   MAX_SCORE = 2
-  attr_accessor :human, :computer
+  attr_accessor :human, :computer, :current_marker
 
   def initialize
+    clear
     @human = Human.new
     @computer = Computer.new
   end
 
+  def who_goes_first(user_answer)
+    @current_marker = if user_answer == 'y'
+                        human.marker
+                      else
+                        computer.marker
+                      end
+  end
+
   def start_round
-    round = Round.new(@human, @computer)
+    round = Round.new(@human, @computer, @current_marker)
     round.start
   end
 
@@ -319,11 +309,11 @@ class TTTGame
 
   def main_game
     loop do
+      ask_user_for_turn
       start_round until game_over?
       reset_score
       break unless play_again?
       display_play_again_message
-      continue
     end
   end
 
@@ -335,6 +325,17 @@ class TTTGame
   end
 
   private
+
+  def ask_user_for_turn
+    answer = ''
+    loop do
+      puts "Do you want to go first? (y or n)"
+      answer = gets.chomp.downcase
+      break if %w(y n).include?(answer)
+      puts "Sorry, must enter y or n."
+    end
+    who_goes_first(answer)
+  end
 
   def display_welcome_message
     puts "Hello #{human.name}! Welcome to Tic Tac Toe!
