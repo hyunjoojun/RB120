@@ -160,16 +160,31 @@ end
 
 class Round
   include Displayable
-
   attr_accessor :board, :human, :computer, :current_marker
-
-  FIRST_TO_MOVE = 'O'
 
   def initialize(human, computer)
     @board = Board.new
     @human = human
     @computer = computer
-    @current_marker = FIRST_TO_MOVE
+  end
+
+  def ask_user_for_turn
+    answer = ''
+    loop do
+      puts "Do you want to go first? (y or n)"
+      answer = gets.chomp.downcase
+      break if %w(y n).include?(answer)
+      puts "Sorry, must enter y or n."
+    end
+    who_goes_first(answer)
+  end
+
+  def who_goes_first(user_answer)
+    @current_marker = if user_answer == 'y'
+                        human.marker
+                      else
+                        computer.marker
+                      end
   end
 
   def display_board
@@ -258,7 +273,6 @@ class Round
 
   def reset
     board.reset
-    @current_marker = FIRST_TO_MOVE
     clear
   end
 
@@ -268,6 +282,7 @@ class Round
   end
 
   def start
+    ask_user_for_turn
     display_board
     player_move
     display_result
@@ -315,7 +330,6 @@ class TTTGame
   def play
     clear
     display_welcome_message
-    continue
     main_game
     display_goodbye_message
   end
