@@ -13,6 +13,15 @@ module Displayable
     puts "Press enter to continue\r"
     gets
   end
+
+  def display_play_again_message
+    puts "Let's play again!"
+    empty_line
+  end
+
+  def display_goodbye_message
+    puts 'Thanks for playing Tic Tac Toe! Goodbye!'
+  end
 end
 
 class Board
@@ -82,7 +91,6 @@ end
 
 class Square
   INITIAL_MARKER = ' '
-
   attr_accessor :marker
 
   def initialize(marker = INITIAL_MARKER)
@@ -102,13 +110,19 @@ class Square
   end
 end
 
-class HumanPlayer
+class Player
   attr_accessor :score, :name, :marker
 
   def initialize
+    @score = 0
+  end
+end
+
+class Human < Player
+  def initialize
+    super
     ask_user_for_name
     ask_user_to_choose_marker
-    @score = 0
   end
 
   def ask_user_for_name
@@ -134,13 +148,13 @@ class HumanPlayer
   end
 end
 
-class ComputerPlayer
-  attr_accessor :score, :name, :marker
+class Computer < Player
+  COMPUTER_MARKER = 'O'
 
   def initialize
-    @score = 0
+    super
     @name = ['T-1000', 'Oreo', 'Wall-E', 'K9', 'BoyBot'].sample
-    @marker = 'O'
+    @marker = COMPUTER_MARKER
   end
 end
 
@@ -266,14 +280,12 @@ end
 
 class TTTGame
   include Displayable
-
   MAX_SCORE = 2
-
   attr_accessor :human, :computer
 
   def initialize
-    @human = HumanPlayer.new
-    @computer = ComputerPlayer.new
+    @human = Human.new
+    @computer = Computer.new
   end
 
   def start_round
@@ -296,6 +308,7 @@ class TTTGame
       reset_score
       break unless play_again?
       display_play_again_message
+      continue
     end
   end
 
@@ -316,10 +329,6 @@ class TTTGame
     empty_line
   end
 
-  def display_goodbye_message
-    puts 'Thanks for playing Tic Tac Toe! Goodbye!'
-  end
-
   def play_again?
     answer = nil
     loop do
@@ -330,11 +339,6 @@ class TTTGame
       puts 'Sorry, must be y or n'
     end
     answer == 'y'
-  end
-
-  def display_play_again_message
-    puts "Let's play again!"
-    empty_line
   end
 end
 

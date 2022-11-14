@@ -14,56 +14,71 @@ class Board
     @squares[num].marker = marker
   end
 
-  def find_at_risk_square
-    enemy_squares = squares.select do |square_num, square|
-      square.marker != 'O' && square.marked?
+  def human_about_to_win
+    marked_squares = all_squares_with(human.marker)
+    WINNING_LINES.any? do |line|
+      (line - marked_squares).length == 1
     end
-    enemy_positions = enemy_squares.keys
-
-    at_risk_line = WINNING_LINES.find do |line|
-      (line - enemy_positions).length == 1
-    end
-
-    (at_risk_line - enemy_positions).first
   end
 
-  # def unmarked_keys
-  #   @squares.keys.select { |key| @squares[key].unmarked? }
-  # end
+  def computer_about_to_win
+    marked_squares = all_squares_with(computer.marker)
+    WINNING_LINES.any? do |line|
+      (line - marked_squares).length == 1
+    end
+  end
 
-  # # rubocop:disable Metrics/AbcSize
-  # # rubocop:disable Metrics/MethodLength
-  # def draw
-  #   puts '     |     |'
-  #   puts "  #{@squares[1]}  |  #{@squares[2]}  |  #{@squares[3]}"
-  #   puts '     |     |'
-  #   puts '-----+-----+-----'
-  #   puts '     |     |'
-  #   puts "  #{@squares[4]}  |  #{@squares[5]}  |  #{@squares[6]}"
-  #   puts '     |     |'
-  #   puts '-----+-----+-----'
-  #   puts '     |     |'
-  #   puts "  #{@squares[7]}  |  #{@squares[8]}  |  #{@squares[9]}"
-  #   puts '     |     |'
-  # end
-  # # rubocop:enable Metrics/AbcSize
-  # # rubocop:enable Metrics/MethodLength
+  def all_squares_with(marker)
+    squares.select do |_, square|
+      square.marker == marker
+    end.keys
+  end
 
-  # def full?
-  #   unmarked_keys.empty?
-  # end
+  def strategic_next_square_for(marker)
+    marked_squares = all_squares_with(marker)
+    at_risk_line = WINNING_LINES.find do |line|
+      (line - marked_squares).length == 1
+    end
+    (at_risk_line - marked_squares).first
+  end
 
-  # def someone_won?
-  #   !!winning_marker
-  # end
+  def unmarked_keys
+    @squares.keys.select { |key| @squares[key].unmarked? }
+  end
 
-  # def winning_marker
-  #   WINNING_LINES.each do |line|
-  #     squares = @squares.values_at(*line)
-  #     return squares.first.marker if three_identical_markers?(squares)
-  #   end
-  #   nil
-  # end
+  # rubocop:disable Metrics/AbcSize
+  # rubocop:disable Metrics/MethodLength
+  def draw
+    puts '     |     |'
+    puts "  #{@squares[1]}  |  #{@squares[2]}  |  #{@squares[3]}"
+    puts '     |     |'
+    puts '-----+-----+-----'
+    puts '     |     |'
+    puts "  #{@squares[4]}  |  #{@squares[5]}  |  #{@squares[6]}"
+    puts '     |     |'
+    puts '-----+-----+-----'
+    puts '     |     |'
+    puts "  #{@squares[7]}  |  #{@squares[8]}  |  #{@squares[9]}"
+    puts '     |     |'
+  end
+  # rubocop:enable Metrics/AbcSize
+  # rubocop:enable Metrics/MethodLength
+
+  def full?
+    unmarked_keys.empty?
+  end
+
+  def someone_won?
+    !!winning_marker
+  end
+
+  def winning_marker
+    WINNING_LINES.each do |line|
+      squares = @squares.values_at(*line)
+      return squares.first.marker if three_identical_markers?(squares)
+    end
+    nil
+  end
 
   def reset
     (1..9).each { |key| @squares[key] = Square.new }
@@ -71,9 +86,9 @@ class Board
 
   private
 
-  # def three_identical_markers?(squares)
-  #   markers = squares.select(&:marked?).collect(&:marker)
-  #   return false if markers.size != 3
-  #   markers.min == markers.max
-  # end
+  def three_identical_markers?(squares)
+    markers = squares.select(&:marked?).collect(&:marker)
+    return false if markers.size != 3
+    markers.min == markers.max
+  end
 end
