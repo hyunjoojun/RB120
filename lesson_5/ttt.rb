@@ -125,6 +125,8 @@ class Human < Player
     ask_user_to_choose_marker
   end
 
+  private
+
   def ask_user_for_name
     player_name = ''
     loop do
@@ -139,10 +141,10 @@ class Human < Player
   def ask_user_to_choose_marker
     marker_choice = ''
     loop do
-      puts "Please choose your marker: (Except O)"
+      puts "Please choose your marker: (Any marker except O)"
       marker_choice = gets.chomp.strip.upcase
       break if marker_choice.size == 1 && marker_choice != 'O'
-      puts "Sorry, Invalid choice."
+      puts "Sorry, it has to be one letter long."
     end
     self.marker = marker_choice
   end
@@ -168,6 +170,18 @@ class Round
     @computer = computer
     @current_marker = current_marker
   end
+
+  def start
+    display_board
+    player_move
+    display_result
+    update_score
+    display_score
+    continue
+    reset
+  end
+
+  private
 
   def display_board
     puts "#{human.name}: #{human.marker}, #{computer.name}: #{computer.marker}"
@@ -262,16 +276,6 @@ class Round
     clear
     display_board
   end
-
-  def start
-    display_board
-    player_move
-    display_result
-    update_score
-    display_score
-    continue
-    reset
-  end
 end
 
 class TTTGame
@@ -283,6 +287,26 @@ class TTTGame
     clear
     @human = Human.new
     @computer = Computer.new
+  end
+
+  def play
+    clear
+    display_welcome_message
+    main_game
+    display_goodbye_message
+  end
+
+  private
+
+  def main_game
+    loop do
+      ask_user_for_turn
+      start_round until game_over?
+      display_grand_winner
+      reset_score
+      break unless play_again?
+      display_play_again_message
+    end
   end
 
   def who_goes_first(user_answer)
@@ -307,24 +331,13 @@ class TTTGame
     computer.score = 0
   end
 
-  def main_game
-    loop do
-      ask_user_for_turn
-      start_round until game_over?
-      reset_score
-      break unless play_again?
-      display_play_again_message
+  def display_grand_winner
+    if human.score > computer.score
+      puts "\n *** The grand winner is #{human.name}! ***"
+    else
+      puts "\n *** The grand winner is #{computer.name}! ***"
     end
   end
-
-  def play
-    clear
-    display_welcome_message
-    main_game
-    display_goodbye_message
-  end
-
-  private
 
   def ask_user_for_turn
     answer = ''
