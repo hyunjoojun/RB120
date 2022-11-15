@@ -9,6 +9,17 @@ module Displayable
     puts ''
   end
 
+  def joinor(arr, delimiter=', ', word='or')
+    case arr.size
+    when 0 then ''
+    when 1 then arr.first.to_s
+    when 2 then arr.join(" #{word} ")
+    else
+      arr[-1] = "#{word} #{arr.last}"
+      arr.join(delimiter)
+    end
+  end
+
   def continue
     puts "Press enter to continue\r"
     gets
@@ -119,10 +130,24 @@ class Player
 end
 
 class Human < Player
+  include Displayable
+
   def initialize
     super
     ask_user_for_name
     ask_user_to_choose_marker
+  end
+
+  def choose_move(board)
+    puts "Choose a square between (#{joinor(board.unmarked_keys)}):"
+    square = nil
+    loop do
+      square = gets.chomp.to_i
+      break if board.unmarked_keys.include?(square)
+
+      puts "Sorry, that's not a valid choice."
+    end
+    square
   end
 
   private
@@ -157,6 +182,10 @@ class Computer < Player
     super
     @name = ['T-1000', 'Oreo', 'Wall-E', 'K9', 'BoyBot'].sample
     @marker = COMPUTER_MARKER
+  end
+
+  def choose_move(board)
+    board.unmarked_keys.sample
   end
 end
 
@@ -213,31 +242,16 @@ class Round
     puts '- - - - - - - - - -'
   end
 
-  def joinor(arr, delimiter=', ', word='or')
-    case arr.size
-    when 0 then ''
-    when 1 then arr.first.to_s
-    when 2 then arr.join(" #{word} ")
-    else
-      arr[-1] = "#{word} #{arr.last}"
-      arr.join(delimiter)
-    end
-  end
-
   def human_moves
-    puts "Choose a square between (#{joinor(board.unmarked_keys)}):"
-    square = nil
-    loop do
-      square = gets.chomp.to_i
-      break if board.unmarked_keys.include?(square)
+    position = human.choose_move(board)
 
-      puts "Sorry, that's not a valid choice."
-    end
-    board[square] = human.marker
+    board[position] = human.marker
   end
 
   def computer_moves
-    board[board.unmarked_keys.sample] = computer.marker
+    position = computer.choose_move(board)
+
+    board[position] = computer.marker
   end
 
   def current_player_moves
