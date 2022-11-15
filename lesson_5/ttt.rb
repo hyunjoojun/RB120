@@ -117,7 +117,7 @@ class Square
   end
 
   def marked?
-    marker != INITIAL_MARKER
+    !unmarked?
   end
 end
 

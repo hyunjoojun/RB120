@@ -14,20 +14,6 @@ class Board
     @squares[num].marker = marker
   end
 
-  def human_about_to_win
-    marked_squares = all_squares_with(human.marker)
-    WINNING_LINES.any? do |line|
-      (line - marked_squares).length == 1
-    end
-  end
-
-  def computer_about_to_win
-    marked_squares = all_squares_with(computer.marker)
-    WINNING_LINES.any? do |line|
-      (line - marked_squares).length == 1
-    end
-  end
-
   def all_squares_with(marker)
     squares.select do |_, square|
       square.marker == marker
