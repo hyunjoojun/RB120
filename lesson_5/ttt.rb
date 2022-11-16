@@ -79,6 +79,31 @@ class Board
     !!winning_marker
   end
 
+  def find_at_risk_square_for_computer
+    human_marked_squares = all_squares_with_human_marker
+    at_risk_line = WINNING_LINES.select do |line|
+      (line - human_marked_squares).length == 1
+    end
+
+    if at_risk_line.empty?
+      nil
+    else
+      possible_at_risk_squares = at_risk_line.map { |line| line - human_marked_squares }.flatten
+      if possible_at_risk_squares.length == 1
+        possible_at_risk_squares.first
+      else
+        possible_at_risk_squares.select { |num| @squares[num].unmarked? }.first
+      end
+    end
+  end
+
+  def all_squares_with_human_marker
+    @squares.select do |_, square|
+      square.marked? && square.marker != Computer::COMPUTER_MARKER
+    end.keys
+    # returns array of square numbers that has human marker
+  end
+
   def winning_marker
     WINNING_LINES.each do |line|
       squares = @squares.values_at(*line)
@@ -185,7 +210,11 @@ class Computer < Player
   end
 
   def choose_move(board)
-    board.unmarked_keys.sample
+    if board.find_at_risk_square_for_computer.nil?
+      board.unmarked_keys.sample
+    else
+      board.find_at_risk_square_for_computer
+    end
   end
 end
 
