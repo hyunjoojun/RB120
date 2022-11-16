@@ -36,6 +36,8 @@ module Displayable
 end
 
 class Board
+  attr_reader :squares
+
   WINNING_LINES = [[1, 2, 3], [4, 5, 6], [7, 8, 9]] + # rows
                   [[1, 4, 7], [2, 5, 8], [3, 6, 9]] + # cols
                   [[1, 5, 9], [3, 5, 7]]              # diagonals
@@ -79,27 +81,16 @@ class Board
     !!winning_marker
   end
 
-  def find_at_risk_line
-    WINNING_LINES.select do |line|
-      (line - all_squares_with_human_marker).length == 1
-    end
-  end
-
-  def find_at_risk_square
-    at_risk_line = find_at_risk_line
-    return nil if at_risk_line.empty?
-
-    at_risk_squares = at_risk_line.map do |line|
-      line - all_squares_with_human_marker
-    end.flatten
-    at_risk_squares.select { |num| @squares[num].unmarked? }.first
+  def all_squares_with_computer_marker
+    @squares.select do |_, square|
+      square.marker == Computer::COMPUTER_MARKER
+    end.keys
   end
 
   def all_squares_with_human_marker
     @squares.select do |_, square|
       square.marked? && square.marker != Computer::COMPUTER_MARKER
     end.keys
-    # returns array of square numbers that has human marker
   end
 
   def winning_marker
@@ -208,11 +199,45 @@ class Computer < Player
   end
 
   def choose_move(board)
-    if board.find_at_risk_square.nil?
-      board.unmarked_keys.sample
+    if find_winning_square(board).nil? && find_at_risk_square(board).nil?
+      board.unmarked_keys.include?(5) ? 5 : board.unmarked_keys.sample
+    elsif find_winning_square(board).nil?
+      find_at_risk_square(board)
     else
-      board.find_at_risk_square
+      find_winning_square(board)
     end
+  end
+
+  def find_winning_line(board)
+    Board::WINNING_LINES.select do |line|
+      (line - board.all_squares_with_computer_marker).length == 1
+    end
+  end
+
+  def find_winning_square(board)
+    winning_line = find_winning_line(board)
+    return nil if winning_line.empty?
+
+    winning_squares = winning_line.map do |line|
+      line - board.all_squares_with_computer_marker
+    end.flatten
+    winning_squares.select { |num| board.squares[num].unmarked? }.first
+  end
+
+  def find_at_risk_line(board)
+    Board::WINNING_LINES.select do |line|
+      (line - board.all_squares_with_human_marker).length == 1
+    end
+  end
+
+  def find_at_risk_square(board)
+    at_risk_line = find_at_risk_line(board)
+    return nil if at_risk_line.empty?
+
+    at_risk_squares = at_risk_line.map do |line|
+      line - board.all_squares_with_human_marker
+    end.flatten
+    at_risk_squares.select { |num| board.squares[num].unmarked? }.first
   end
 end
 
