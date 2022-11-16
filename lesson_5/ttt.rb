@@ -81,15 +81,9 @@ class Board
     !!winning_marker
   end
 
-  def all_squares_with_computer_marker
+  def all_squares_with(marker)
     @squares.select do |_, square|
-      square.marker == Computer::COMPUTER_MARKER
-    end.keys
-  end
-
-  def all_squares_with_human_marker
-    @squares.select do |_, square|
-      square.marked? && square.marker != Computer::COMPUTER_MARKER
+      square.marker == marker
     end.keys
   end
 
@@ -198,6 +192,11 @@ class Computer < Player
     @marker = COMPUTER_MARKER
   end
 
+  def human_marker(board)
+    markers = board.squares.values.select(&:marked?).collect(&:marker)
+    markers.select { |marker| marker != COMPUTER_MARKER }.first
+  end
+
   def choose_move(board)
     if find_winning_square(board).nil? && find_at_risk_square(board).nil?
       board.unmarked_keys.include?(5) ? 5 : board.unmarked_keys.sample
@@ -210,7 +209,7 @@ class Computer < Player
 
   def find_winning_line(board)
     Board::WINNING_LINES.select do |line|
-      (line - board.all_squares_with_computer_marker).length == 1
+      (line - board.all_squares_with(COMPUTER_MARKER)).length == 1
     end
   end
 
@@ -219,14 +218,14 @@ class Computer < Player
     return nil if winning_line.empty?
 
     winning_squares = winning_line.map do |line|
-      line - board.all_squares_with_computer_marker
+      line - board.all_squares_with(COMPUTER_MARKER)
     end.flatten
     winning_squares.select { |num| board.squares[num].unmarked? }.first
   end
 
   def find_at_risk_line(board)
     Board::WINNING_LINES.select do |line|
-      (line - board.all_squares_with_human_marker).length == 1
+      (line - board.all_squares_with(human_marker(board))).length == 1
     end
   end
 
@@ -235,7 +234,7 @@ class Computer < Player
     return nil if at_risk_line.empty?
 
     at_risk_squares = at_risk_line.map do |line|
-      line - board.all_squares_with_human_marker
+      line - board.all_squares_with(human_marker(board))
     end.flatten
     at_risk_squares.select { |num| board.squares[num].unmarked? }.first
   end
@@ -346,7 +345,7 @@ end
 
 class TTTGame
   include Displayable
-  MAX_SCORE = 2
+  MAX_SCORE = 3
   attr_accessor :human, :computer, :current_marker
 
   def initialize
