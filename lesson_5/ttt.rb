@@ -103,6 +103,22 @@ class Board
     (1..9).each { |key| @squares[key] = Square.new }
   end
 
+  def find_winning_line_for(marker)
+    WINNING_LINES.select do |line|
+      (line - all_squares_with(marker)).length == 1
+    end
+  end
+
+  def find_winning_square_for(marker)
+    winning_line = find_winning_line_for(marker)
+    return nil if winning_line.empty?
+
+    winning_squares = winning_line.map do |line|
+      line - all_squares_with(marker)
+    end.flatten
+    winning_squares.select { |num| squares[num].unmarked? }.first
+  end
+
   private
 
   def three_identical_markers?(squares)
@@ -198,51 +214,43 @@ class Computer < Player
     @marker = COMPUTER_MARKER
   end
 
-  def human_marker(board)
-    markers = board.squares.values.select(&:marked?).collect(&:marker)
-    markers.select { |marker| marker != COMPUTER_MARKER }.first
-  end
+  def choose_move
+    computer_winning_square = board.find_winning_square_for(COMPUTER_MARKER)
+    human_winning_square = board.find_winning_square_for(human_marker)
 
-  def choose_move(board)
-    if find_winning_square(board).nil? && find_at_risk_square(board).nil?
-      board.unmarked_keys.include?(5) ? 5 : board.unmarked_keys.sample
-    elsif find_winning_square(board).nil?
-      find_at_risk_square(board)
-    else
-      find_winning_square(board)
+    if human_winning_square && computer_winning_square.nil?
+      human_winning_square
     end
-  end
 
-  def find_winning_line(board)
-    Board::WINNING_LINES.select do |line|
-      (line - board.all_squares_with(COMPUTER_MARKER)).length == 1
+    if computer_winning_square && human_winning_square.nil?
+      computer_winning_square
     end
-  end
 
-  def find_winning_square(board)
-    winning_line = find_winning_line(board)
-    return nil if winning_line.empty?
-
-    winning_squares = winning_line.map do |line|
-      line - board.all_squares_with(COMPUTER_MARKER)
-    end.flatten
-    winning_squares.select { |num| board.squares[num].unmarked? }.first
-  end
-
-  def find_at_risk_line
-    Board::WINNING_LINES.select do |line|
-      (line - @board.all_squares_with(opponent_marker)).length == 1
+    if human_winning_square.nil? && computer_winning_square.nil?
+      if board.unmarked_keys.include?(5)
+        5
+      else
+        board.unmarked_keys.sample
+      end
     end
+
+    # if board.find_winning_square_for(COMPUTER_MARKER).nil? && board.find_winning_square_for(human_marker).nil?
+    #   if board.unmarked_keys.include?(5)
+    #     5
+    #   else
+    #     board.unmarked_keys.sample
+    #   end
+    # elsif board.find_winning_square_for(COMPUTER_MARKER).nil?
+    #   board.find_winning_square_for(human_marker)
+    # else
+    #   board.find_winning_square_for(COMPUTER_MARKER)
+    # end
   end
 
-  def find_at_risk_square(board)
-    at_risk_line = find_at_risk_line(board)
-    return nil if at_risk_line.empty?
+  private
 
-    at_risk_squares = at_risk_line.map do |line|
-      line - board.all_squares_with(human_marker(board))
-    end.flatten
-    at_risk_squares.select { |num| board.squares[num].unmarked? }.first
+  def human_marker
+    (board.markers - COMPUTER_MARKER).first
   end
 end
 
