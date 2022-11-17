@@ -20,7 +20,7 @@ module Displayable
     end
   end
 
-  def continue
+  def prompt_player_to_continue
     puts "Press enter to continue\r"
     gets
   end
@@ -53,6 +53,10 @@ class Board
 
   def unmarked_keys
     @squares.keys.select { |key| @squares[key].unmarked? }
+  end
+
+  def markers
+    @squares.map(&:to_s).uniq
   end
 
   # rubocop:disable Metrics/AbcSize
@@ -186,6 +190,8 @@ end
 class Computer < Player
   COMPUTER_MARKER = 'O'
 
+  attr_accessor :board
+
   def initialize
     super
     @name = ['T-1000', 'Oreo', 'Wall-E', 'K9', 'BoyBot'].sample
@@ -223,9 +229,9 @@ class Computer < Player
     winning_squares.select { |num| board.squares[num].unmarked? }.first
   end
 
-  def find_at_risk_line(board)
+  def find_at_risk_line
     Board::WINNING_LINES.select do |line|
-      (line - board.all_squares_with(human_marker(board))).length == 1
+      (line - @board.all_squares_with(opponent_marker)).length == 1
     end
   end
 
@@ -248,17 +254,19 @@ class Round
     @board = Board.new
     @human = human
     @computer = computer
+    @human.board = @board
+    @computer.board = @board
     @current_marker = current_marker
   end
 
   def start
     display_board
-    player_move
+    play_round_until_end
     display_result
     update_score
     display_score
-    continue
-    reset
+    prompt_player_to_continue
+    reset_board_and_clear
   end
 
   private
@@ -270,7 +278,7 @@ class Round
     empty_line
   end
 
-  def player_move
+  def play_round_until_end
     loop do
       current_player_moves
       break if board.someone_won? || board.full?
@@ -294,9 +302,7 @@ class Round
   end
 
   def human_moves
-    position = human.choose_move(board)
-
-    board[position] = human.marker
+    human.choose_move(board)
   end
 
   def computer_moves
@@ -332,7 +338,7 @@ class Round
     end
   end
 
-  def reset
+  def reset_board_and_clear
     board.reset
     clear
   end
