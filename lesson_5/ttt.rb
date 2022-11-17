@@ -20,7 +20,7 @@ module Displayable
     end
   end
 
-  def continue
+  def prompt_player_to_continue
     puts "Press enter to continue\r"
     gets
   end
@@ -53,6 +53,10 @@ class Board
 
   def unmarked_keys
     @squares.keys.select { |key| @squares[key].unmarked? }
+  end
+
+  def markers
+    squares.values.select(&:marked?).collect(&:marker)
   end
 
   # rubocop:disable Metrics/AbcSize
@@ -99,6 +103,22 @@ class Board
     (1..9).each { |key| @squares[key] = Square.new }
   end
 
+  def find_winning_line_for(marker)
+    WINNING_LINES.select do |line|
+      (line - all_squares_with(marker)).length == 1
+    end
+  end
+
+  def find_winning_square_for(marker)
+    winning_line = find_winning_line_for(marker)
+    return nil if winning_line.empty?
+
+    winning_squares = winning_line.map do |line|
+      line - all_squares_with(marker)
+    end.flatten
+    winning_squares.select { |num| squares[num].unmarked? }.first
+  end
+
   private
 
   def three_identical_markers?(squares)
@@ -130,7 +150,7 @@ class Square
 end
 
 class Player
-  attr_accessor :score, :name, :marker
+  attr_accessor :score, :name, :marker, :board
 
   def initialize
     @score = 0
@@ -155,7 +175,7 @@ class Human < Player
 
       puts "Sorry, that's not a valid choice."
     end
-    square
+    board[square] = marker
   end
 
   private
@@ -192,51 +212,27 @@ class Computer < Player
     @marker = COMPUTER_MARKER
   end
 
-  def human_marker(board)
-    markers = board.squares.values.select(&:marked?).collect(&:marker)
-    markers.select { |marker| marker != COMPUTER_MARKER }.first
-  end
-
   def choose_move(board)
-    if find_winning_square(board).nil? && find_at_risk_square(board).nil?
-      board.unmarked_keys.include?(5) ? 5 : board.unmarked_keys.sample
-    elsif find_winning_square(board).nil?
-      find_at_risk_square(board)
+    computer_winning_square = board.find_winning_square_for(COMPUTER_MARKER)
+    human_winning_square = board.find_winning_square_for(human_marker)
+
+    if computer_winning_square.nil? && human_winning_square.nil?
+      if board.unmarked_keys.include?(5)
+        board[5] = COMPUTER_MARKER
+      else
+        board[board.unmarked_keys.sample] = COMPUTER_MARKER
+      end
+    elsif computer_winning_square.nil?
+      board[human_winning_square] = COMPUTER_MARKER
     else
-      find_winning_square(board)
+      board[computer_winning_square] = COMPUTER_MARKER
     end
   end
 
-  def find_winning_line(board)
-    Board::WINNING_LINES.select do |line|
-      (line - board.all_squares_with(COMPUTER_MARKER)).length == 1
-    end
-  end
+  private
 
-  def find_winning_square(board)
-    winning_line = find_winning_line(board)
-    return nil if winning_line.empty?
-
-    winning_squares = winning_line.map do |line|
-      line - board.all_squares_with(COMPUTER_MARKER)
-    end.flatten
-    winning_squares.select { |num| board.squares[num].unmarked? }.first
-  end
-
-  def find_at_risk_line(board)
-    Board::WINNING_LINES.select do |line|
-      (line - board.all_squares_with(human_marker(board))).length == 1
-    end
-  end
-
-  def find_at_risk_square(board)
-    at_risk_line = find_at_risk_line(board)
-    return nil if at_risk_line.empty?
-
-    at_risk_squares = at_risk_line.map do |line|
-      line - board.all_squares_with(human_marker(board))
-    end.flatten
-    at_risk_squares.select { |num| board.squares[num].unmarked? }.first
+  def human_marker
+    (board.markers - [COMPUTER_MARKER]).first
   end
 end
 
@@ -248,17 +244,19 @@ class Round
     @board = Board.new
     @human = human
     @computer = computer
+    @human.board = @board
+    @computer.board = @board
     @current_marker = current_marker
   end
 
   def start
     display_board
-    player_move
+    play_round_until_end
     display_result
     update_score
     display_score
-    continue
-    reset
+    prompt_player_to_continue
+    reset_board_and_clear
   end
 
   private
@@ -270,7 +268,7 @@ class Round
     empty_line
   end
 
-  def player_move
+  def play_round_until_end
     loop do
       current_player_moves
       break if board.someone_won? || board.full?
@@ -294,15 +292,11 @@ class Round
   end
 
   def human_moves
-    position = human.choose_move(board)
-
-    board[position] = human.marker
+    human.choose_move(board)
   end
 
   def computer_moves
-    position = computer.choose_move(board)
-
-    board[position] = computer.marker
+    computer.choose_move(board)
   end
 
   def current_player_moves
@@ -332,7 +326,7 @@ class Round
     end
   end
 
-  def reset
+  def reset_board_and_clear
     board.reset
     clear
   end
