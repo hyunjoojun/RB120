@@ -211,10 +211,13 @@ class Computer < Player
   end
 
   def choose_move(board)
-    sq = if computer_about_to_win?(board)
-           board.find_winning_square_for(COMPUTER_MARKER)
-         elsif human_about_to_win?(board)
-           board.find_winning_square_for(human_marker)
+    computer_winning_square = board.find_winning_square_for(COMPUTER_MARKER)
+    human_winning_square = board.find_winning_square_for(human_marker)
+
+    sq = if !computer_winning_square.nil? # offense
+           computer_winning_square
+         elsif !human_winning_square.nil? # defense
+           human_winning_square
          else
            board.unmarked_keys.include?(5) ? 5 : board.unmarked_keys.sample
          end
@@ -222,16 +225,6 @@ class Computer < Player
   end
 
   private
-
-  def human_about_to_win?(board)
-    human_winning_square = board.find_winning_square_for(human_marker)
-    !human_winning_square.nil?
-  end
-
-  def computer_about_to_win?(board)
-    computer_winning_square = board.find_winning_square_for(COMPUTER_MARKER)
-    !computer_winning_square.nil?
-  end
 
   def human_marker
     (board.markers - [COMPUTER_MARKER]).first
