@@ -193,7 +193,7 @@ class Human < Player
     marker_choice = ''
     loop do
       puts "Please choose your marker: (Any marker except O)"
-      marker_choice = gets.chomp.strip.upcase
+      marker_choice = gets.chomp.strip
       break if marker_choice.size == 1 && marker_choice != 'O'
       puts "Sorry, it has to be one letter long."
     end
@@ -211,12 +211,12 @@ class Computer < Player
   end
 
   def choose_move(board)
-    sq = if no_one_about_to_win?(board)
-           board.unmarked_keys.include?(5) ? 5 : board.unmarked_keys.sample
+    sq = if computer_about_to_win?(board)
+           board.find_winning_square_for(COMPUTER_MARKER)
          elsif human_about_to_win?(board)
            board.find_winning_square_for(human_marker)
          else
-           board.find_winning_square_for(COMPUTER_MARKER)
+           board.unmarked_keys.include?(5) ? 5 : board.unmarked_keys.sample
          end
     board[sq] = COMPUTER_MARKER
   end
@@ -228,10 +228,9 @@ class Computer < Player
     !human_winning_square.nil?
   end
 
-  def no_one_about_to_win?(board)
+  def computer_about_to_win?(board)
     computer_winning_square = board.find_winning_square_for(COMPUTER_MARKER)
-    human_winning_square = board.find_winning_square_for(human_marker)
-    computer_winning_square.nil? && human_winning_square.nil?
+    !computer_winning_square.nil?
   end
 
   def human_marker
@@ -247,13 +246,12 @@ class Round
     @board = Board.new
     @human = human
     @computer = computer
-    @human.board = @board
     @computer.board = @board
     @current_marker = current_marker
   end
 
   def start
-    display_board
+    clear_screen_and_display_board
     play_round_until_end
     display_result
     update_score
