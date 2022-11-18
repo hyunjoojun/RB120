@@ -214,7 +214,7 @@ class Computer < Player
     computer_winning_square = board.find_winning_square_for(COMPUTER_MARKER)
     human_winning_square = board.find_winning_square_for(human_marker)
 
-    sq = if !computer_winning_square.nil? # offense
+    sq = if !computer_winning_square.nil? # offense first
            computer_winning_square
          elsif !human_winning_square.nil? # defense
            human_winning_square
@@ -244,6 +244,7 @@ class Round
   end
 
   def start
+    ask_user_for_turn
     clear_screen_and_display_board
     play_round_until_end
     display_result
@@ -303,6 +304,25 @@ class Round
     end
   end
 
+  def ask_user_for_turn
+    answer = ''
+    loop do
+      puts "Do you want to go first? (y or n)"
+      answer = gets.chomp.downcase
+      break if %w(y n).include?(answer)
+      puts "Sorry, must enter y or n."
+    end
+    who_goes_first(answer)
+  end
+
+  def who_goes_first(user_answer)
+    @current_marker = if user_answer == 'y'
+                        human.marker
+                      else
+                        computer.marker
+                      end
+  end
+
   def human_turn?
     @current_marker == human.marker
   end
@@ -353,21 +373,12 @@ class TTTGame
 
   def main_game
     loop do
-      ask_user_for_turn
       start_round until game_over?
       display_grand_winner
       reset_score
       break unless play_again?
       display_play_again_message
     end
-  end
-
-  def who_goes_first(user_answer)
-    @current_marker = if user_answer == 'y'
-                        human.marker
-                      else
-                        computer.marker
-                      end
   end
 
   def start_round
@@ -390,17 +401,6 @@ class TTTGame
     else
       puts "\n *** The grand winner is #{computer.name}! ***"
     end
-  end
-
-  def ask_user_for_turn
-    answer = ''
-    loop do
-      puts "Do you want to go first? (y or n)"
-      answer = gets.chomp.downcase
-      break if %w(y n).include?(answer)
-      puts "Sorry, must enter y or n."
-    end
-    who_goes_first(answer)
   end
 
   def display_welcome_message
