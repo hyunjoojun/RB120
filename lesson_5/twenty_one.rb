@@ -5,16 +5,40 @@ class Participant
 
   def initialize
     @cards = []
-    set_name
   end
 
   def add_card(new_card)
     @cards << new_card
   end
+
+  def reset_cards!
+    @cards = []
+  end
+
+  def total
+    # calculating deck sum
+  end
+
+  def hit
+
+  end
+
+  def stay
+
+  end
+
+  def busted?
+
+  end
 end
 
 class Player < Participant
-  def set_name
+  def initialize
+    super
+    ask_user_for_name
+  end
+
+  def ask_user_for_name
     name = ''
     loop do
       puts "What's your name?"
@@ -24,17 +48,26 @@ class Player < Participant
     end
     self.name = name.capitalize
   end
+
+  def turn
+    # ask player hit or stay
+  end
 end
 
 class Dealer < Participant
   ROBOTS = ['T-1000', 'Oreo', 'Wall-E', 'K9', 'BoyBot']
 
-  def set_name
-    self.name = ROBOTS.sample
+  def initialize
+    super
+    @name = ROBOTS.sample
   end
 
   def show_cards
     cards.first
+  end
+
+  def turn
+    # hit until total <= 17
   end
 end
 
@@ -43,10 +76,11 @@ class Deck
 
   def initialize
     @cards = []
-    Card::SUITS.each do |suit|
-      Card::FACES.each do |face|
-        @cards << Card.new(suit, face)
-      end
+    Card::SUITS.product(Card::FACES).each do |tuple|
+      suit = tuple[0]
+      face = tuple[1]
+
+      @cards << Card.new(suit, face)
     end
     scramble!
   end
@@ -98,16 +132,16 @@ class Round
 
   def reset_cards
     self.deck = Deck.new
-    player.cards = []
-    dealer.cards = []
+    player.reset_cards!
+    dealer.reset_cards!
   end
 
   def start
     while @winner.nil?
       deal_cards
       show_initial_cards
-      # player_turn
-      # dealer_turn
+      player.turn
+      dealer.turn
       # show_result
       reset_cards
       @winner = 'Player'
