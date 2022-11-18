@@ -11,6 +11,18 @@ class Participant
   def add_card(new_card)
     @cards << new_card
   end
+
+  def reset_cards!
+    @cards = []
+  end
+
+  def total
+    # calculating deck sum
+  end
+
+  def hit
+
+  end
 end
 
 class Player < Participant
@@ -24,6 +36,11 @@ class Player < Participant
     end
     self.name = name.capitalize
   end
+
+  def player_turn
+    # ask player hit or stay
+    # hit() || stay()
+  end
 end
 
 class Dealer < Participant
@@ -36,6 +53,11 @@ class Dealer < Participant
   def show_cards
     cards.first
   end
+
+  def dealer_turn
+    # AI calculate how many times to hit or to stay
+    # hit() || stay()
+  end
 end
 
 class Deck
@@ -43,10 +65,11 @@ class Deck
 
   def initialize
     @cards = []
-    Card::SUITS.each do |suit|
-      Card::FACES.each do |face|
-        @cards << Card.new(suit, face)
-      end
+    Card::SUITS.product(Card::FACES).each do |tuple|
+      suit = tuple[0]
+      face = tuple[1]
+
+      @cards << Card.new(suit, face)
     end
     scramble!
   end
@@ -98,8 +121,8 @@ class Round
 
   def reset_cards
     self.deck = Deck.new
-    player.cards = []
-    dealer.cards = []
+    player.reset_cards!
+    dealer.reset_cards!
   end
 
   def start
@@ -143,7 +166,8 @@ class TwentyOneGame
 
   def start
     display_welcome_message
-    while @current_round < 6
+    non_tie_rounds = @rounds.select { |round| round.winner == "player" }
+    while non_tie_rounds < 6
       start_round
       @current_round += 1
     end
