@@ -231,11 +231,11 @@ class Round
     dealer.reset_cards!
   end
 
-  def game_over_or_dealer_turn
-    if player.busted?
+  def display_round_result
+    if dealer.busted? || player.busted?
       show_busted
     else
-      dealer.turn(deck)
+      show_result
     end
   end
 
@@ -243,9 +243,8 @@ class Round
     deal_cards
     show_initial_cards
     player.turn(deck)
-    game_over_or_dealer_turn
-    show_busted if dealer.busted?
-    show_result if !player.busted? && !dealer.busted?
+    dealer.turn(deck) unless player.busted?
+    display_round_result
     reset_cards
   end
 end
@@ -254,6 +253,7 @@ class TwentyOneGame
   attr_reader :rounds, :player, :dealer
 
   def initialize
+    system 'clear'
     @current_round = 1
     @rounds = []
     @player = Player.new
