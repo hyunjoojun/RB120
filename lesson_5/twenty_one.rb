@@ -1,10 +1,11 @@
 require 'pry'
 
 class Participant
-  attr_accessor :name, :cards
+  attr_accessor :name, :cards, :score
 
   def initialize
     @cards = []
+    @score = 0
   end
 
   def add_card(new_card)
@@ -15,25 +16,30 @@ class Participant
     @cards = []
   end
 
-  def total
-    total = 0
-    cards.each do |card|
-      if card.ace?
-        total += 11
-      elsif card.jack? || card.queen? || card.king?
-        total += 10
-      else
-        total += card.face.to_i
-      end
-    end
+  def reset_scores
+    @score = 0
+  end
 
-    # correct for Aces
+  def correct_total_for_aces(total)
     cards.select(&:ace?).count.times do
       break if total <= 21
       total -= 10
     end
-
     total
+  end
+
+  def total
+    total = 0
+    cards.each do |card|
+      total += if card.ace?
+                 11
+               elsif card.jack? || card.queen? || card.king?
+                 10
+               else
+                 card.face.to_i
+               end
+    end
+    correct_total_for_aces(total)
   end
 
   def show_hand
@@ -74,18 +80,22 @@ class Player < Participant
     self.name = name.capitalize
   end
 
+  def ask_user_to_hit_or_stay
+    puts "Would you like to (h)it or (s)tay?"
+    answer = nil
+    loop do
+      answer = gets.chomp.strip.downcase
+      break if ['h', 's'].include?(answer)
+      puts "Sorry, must enter h or s."
+    end
+    answer
+  end
+
   def turn(deck)
     puts "#{name}'s turn..."
 
     loop do
-      puts "Would you like to (h)it or (s)tay?"
-      answer = nil
-      loop do
-        answer = gets.chomp.strip.downcase
-        break if ['h', 's'].include?(answer)
-        puts "Sorry, must enter h or s."
-      end
-
+      answer = ask_user_to_hit_or_stay
       if answer == 's'
         stay
         break
@@ -152,7 +162,7 @@ end
 
 class Card
   SUITS = %w(♥ ♦ ♣ ♠)
-  FACES = %w(2 3 4 5 6 7 8 9 10 Jack Queen King Ace)
+  FACES = %w(2 3 4 5 6 7 8 9 10 J Q K A)
   attr_reader :face, :suit
 
   def initialize(suit, face)
@@ -165,19 +175,19 @@ class Card
   end
 
   def ace?
-    face == 'Ace'
+    face == 'A'
   end
 
   def king?
-    face == 'King'
+    face == 'K'
   end
 
   def queen?
-    face == 'Queen'
+    face == 'Q'
   end
 
   def jack?
-    face == 'Jack'
+    face == 'J'
   end
 end
 
@@ -212,10 +222,7 @@ class Round
     end
   end
 
-  def show_result
-    puts "#{player.name} => #{player.total}"
-    puts "#{dealer.name} => #{dealer.total}"
-
+  def display_winner
     if player.total > dealer.total
       puts "#{player.name} wins!"
     elsif player.total < dealer.total
@@ -225,10 +232,30 @@ class Round
     end
   end
 
+  def show_result
+    puts "#{player.name} => #{player.total}"
+    puts "#{dealer.name} => #{dealer.total}"
+    display_winner
+  end
+
   def reset_cards
     self.deck = Deck.new
     player.reset_cards!
     dealer.reset_cards!
+  end
+
+  def calculate_scores
+    if player.total > dealer.total
+      player.score += 1
+    elsif player.total < dealer.total
+      dealer.score += 1
+    end
+  end
+
+  def display_scores
+    puts " - - - Scores - - -"
+    puts "#{player.name} : #{player.score}"
+    puts "#{dealer.name} : #{dealer.score}"
   end
 
   def display_round_result
@@ -244,7 +271,9 @@ class Round
     show_initial_cards
     player.turn(deck)
     dealer.turn(deck) unless player.busted?
+    calculate_scores
     display_round_result
+    display_scores
     reset_cards
   end
 end
@@ -254,7 +283,6 @@ class TwentyOneGame
 
   def initialize
     system 'clear'
-    @current_round = 1
     @rounds = []
     @player = Player.new
     @dealer = Dealer.new
@@ -271,16 +299,29 @@ class TwentyOneGame
   end
 
   def start_round
+    system 'clear'
     round = Round.new(@player, @dealer)
     round.start
     @rounds << round
   end
 
+  def play_again?
+    answer = nil
+    loop do
+      puts 'Would you like to play again? (y/n)'
+      answer = gets.chomp.downcase
+      break if %w(y n).include?(answer)
+
+      puts 'Sorry, must be y or n'
+    end
+    answer == 'y'
+  end
+
   def start
     display_welcome_message
-    while @current_round < 2
+    loop do
       start_round
-      @current_round += 1
+      break unless play_again?
     end
     display_goodbye_message
   end
