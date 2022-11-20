@@ -268,13 +268,13 @@ class Round
   end
 
   def determine_winner
-    if dealer.busted?
-      @winner = 'Player'
-    elsif player.busted?
-      @winner = 'Dealer'
-    else
-      @winner = greater_total
-    end
+    @winner = if dealer.busted?
+                'Player'
+              elsif player.busted?
+                'Dealer'
+              else
+                greater_total
+              end
   end
 
   def display_round_result
