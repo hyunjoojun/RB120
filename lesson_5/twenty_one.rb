@@ -192,12 +192,13 @@ class Card
 end
 
 class Round
-  attr_accessor :deck, :player, :dealer
+  attr_accessor :deck, :player, :dealer, :winner
 
   def initialize(player, dealer)
     @deck = Deck.new
     @player = player
     @dealer = dealer
+    @winner = nil
   end
 
   def deal_cards
@@ -245,9 +246,9 @@ class Round
   end
 
   def calculate_scores
-    if player.total > dealer.total
+    if @winner == 'Player'
       player.score += 1
-    elsif player.total < dealer.total
+    elsif @winner == 'Dealer'
       dealer.score += 1
     end
   end
@@ -256,6 +257,24 @@ class Round
     puts " - - - Scores - - -"
     puts "#{player.name} : #{player.score}"
     puts "#{dealer.name} : #{dealer.score}"
+  end
+
+  def greater_total
+    if player.total > dealer.total
+      'Player'
+    else
+      'Dealer'
+    end
+  end
+
+  def determine_winner
+    if dealer.busted?
+      @winner = 'Player'
+    elsif player.busted?
+      @winner = 'Dealer'
+    else
+      @winner = greater_total
+    end
   end
 
   def display_round_result
@@ -271,6 +290,7 @@ class Round
     show_initial_cards
     player.turn(deck)
     dealer.turn(deck) unless player.busted?
+    determine_winner
     calculate_scores
     display_round_result
     display_scores
