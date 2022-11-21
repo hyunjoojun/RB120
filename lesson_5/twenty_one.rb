@@ -28,17 +28,20 @@ class Participant
     total
   end
 
-  def total
-    total = 0
-    cards.each do |card|
-      total += if card.ace?
-                 11
-               elsif card.jack? || card.queen? || card.king?
-                 10
-               else
-                 card.face.to_i
-               end
+  def convert_card_to_value
+    cards.map do |card|
+      if card.ace?
+        11
+      elsif card.jack? || card.queen? || card.king?
+        10
+      else
+        card.face.to_i
+      end
     end
+  end
+
+  def total
+    total = convert_card_to_value.sum
     correct_total_for_aces(total)
   end
 
@@ -46,6 +49,10 @@ class Participant
     puts "#{name}: #{cards.join(' + ')}"
     puts "=> Total: #{total}"
     puts ""
+  end
+
+  def display_turn
+    puts "#{name}'s turn..."
   end
 
   def hit(deck)
@@ -92,7 +99,7 @@ class Player < Participant
   end
 
   def turn(deck)
-    puts "#{name}'s turn..."
+    display_turn
 
     loop do
       answer = ask_user_to_hit_or_stay
@@ -122,7 +129,7 @@ class Dealer < Participant
   end
 
   def turn(deck)
-    puts "#{name}'s turn..."
+    display_turn
 
     loop do
       if total >= 17 && !busted?
@@ -246,9 +253,9 @@ class Round
   end
 
   def calculate_scores
-    if @winner == 'Player'
+    if @winner == player.name
       player.score += 1
-    elsif @winner == 'Dealer'
+    elsif @winner == dealer.name
       dealer.score += 1
     end
   end
@@ -261,17 +268,17 @@ class Round
 
   def greater_total
     if player.total > dealer.total
-      'Player'
+      player.name
     else
-      'Dealer'
+      dealer.name
     end
   end
 
   def determine_winner
     @winner = if dealer.busted?
-                'Player'
+                player.name
               elsif player.busted?
-                'Dealer'
+                dealer.name
               else
                 greater_total
               end
@@ -285,11 +292,15 @@ class Round
     end
   end
 
-  def start
+  def main_game
     deal_cards
     show_initial_cards
     player.turn(deck)
     dealer.turn(deck) unless player.busted?
+  end
+
+  def start
+    main_game
     determine_winner
     calculate_scores
     display_round_result
@@ -325,6 +336,11 @@ class TwentyOneGame
     @rounds << round
   end
 
+  def display_final_scores
+    system 'clear'
+    rounds.last.display_scores
+  end
+
   def play_again?
     answer = nil
     loop do
@@ -343,6 +359,7 @@ class TwentyOneGame
       start_round
       break unless play_again?
     end
+    display_final_scores
     display_goodbye_message
   end
 end
