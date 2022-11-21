@@ -63,6 +63,7 @@ class Participant
 
   def stay
     puts "#{name} stays!"
+    show_hand
   end
 
   def busted?
