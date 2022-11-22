@@ -1,5 +1,3 @@
-require 'pry'
-
 class Participant
   attr_accessor :name, :cards, :score
 
@@ -18,26 +16,6 @@ class Participant
 
   def reset_scores
     @score = 0
-  end
-
-  def correct_total_for_aces(total)
-    cards.select(&:ace?).count.times do
-      break if total <= 21
-      total -= 10
-    end
-    total
-  end
-
-  def convert_card_to_value
-    cards.map do |card|
-      if card.ace?
-        11
-      elsif card.jack? || card.queen? || card.king?
-        10
-      else
-        card.face.to_i
-      end
-    end
   end
 
   def total
@@ -69,6 +47,28 @@ class Participant
   def busted?
     total > 21
   end
+
+  private
+
+  def correct_total_for_aces(total)
+    cards.select(&:ace?).count.times do
+      break if total <= 21
+      total -= 10
+    end
+    total
+  end
+
+  def convert_card_to_value
+    cards.map do |card|
+      if card.ace?
+        11
+      elsif card.jack? || card.queen? || card.king?
+        10
+      else
+        card.face.to_i
+      end
+    end
+  end
 end
 
 class Player < Participant
@@ -76,6 +76,17 @@ class Player < Participant
     super
     ask_user_for_name
   end
+
+  def turn(deck)
+    display_turn
+    loop do
+      answer = ask_user_to_hit_or_stay
+      answer == 'h' ? hit(deck) : stay
+      break if answer == 's' || busted?
+    end
+  end
+
+  private
 
   def ask_user_for_name
     name = ''
@@ -98,23 +109,6 @@ class Player < Participant
     end
     answer
   end
-
-  def turn(deck)
-    display_turn
-
-    loop do
-      answer = ask_user_to_hit_or_stay
-      if answer == 's'
-        stay
-        break
-      elsif busted?
-        break
-      else
-        hit(deck)
-        break if busted?
-      end
-    end
-  end
 end
 
 class Dealer < Participant
@@ -131,15 +125,13 @@ class Dealer < Participant
 
   def turn(deck)
     display_turn
-
     loop do
       if total >= 17 && !busted?
         stay
         break
-      elsif busted?
-        break
       else
         hit(deck)
+        break if busted?
       end
     end
   end
@@ -209,6 +201,30 @@ class Round
     @winner = nil
   end
 
+  def start
+    main_game
+    determine_winner
+    calculate_scores
+    display_round_result
+    display_scores
+    reset_cards
+  end
+
+  def display_scores
+    puts " - - - Scores - - -"
+    puts "#{player.name} : #{player.score}"
+    puts "#{dealer.name} : #{dealer.score}"
+  end
+
+  private
+
+  def main_game
+    deal_cards
+    show_initial_cards
+    player.turn(deck)
+    dealer.turn(deck) unless player.busted?
+  end
+
   def deal_cards
     2.times do
       player.add_card(deck.deal_one)
@@ -261,12 +277,6 @@ class Round
     end
   end
 
-  def display_scores
-    puts " - - - Scores - - -"
-    puts "#{player.name} : #{player.score}"
-    puts "#{dealer.name} : #{dealer.score}"
-  end
-
   def greater_total
     if player.total > dealer.total
       player.name
@@ -292,22 +302,6 @@ class Round
       show_result
     end
   end
-
-  def main_game
-    deal_cards
-    show_initial_cards
-    player.turn(deck)
-    dealer.turn(deck) unless player.busted?
-  end
-
-  def start
-    main_game
-    determine_winner
-    calculate_scores
-    display_round_result
-    display_scores
-    reset_cards
-  end
 end
 
 class TwentyOneGame
@@ -319,6 +313,18 @@ class TwentyOneGame
     @player = Player.new
     @dealer = Dealer.new
   end
+
+  def start
+    display_welcome_message
+    loop do
+      start_round
+      break unless play_again?
+    end
+    display_final_scores
+    display_goodbye_message
+  end
+
+  private
 
   def display_welcome_message
     puts "Hello #{player.name}! Welcome to Twenty-One!
@@ -352,16 +358,6 @@ class TwentyOneGame
       puts 'Sorry, must be y or n'
     end
     answer == 'y'
-  end
-
-  def start
-    display_welcome_message
-    loop do
-      start_round
-      break unless play_again?
-    end
-    display_final_scores
-    display_goodbye_message
   end
 end
 
