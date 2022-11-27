@@ -8,12 +8,16 @@ module Displayable
      ' - - - - - - - - - - - - - -']
   end
 
-  def card_image(suit, face)
-    ["+-----+",
-     "|   #{suit} |",
-     "|     |",
-     "| #{face}   |",
-     '+-----+']
+  def side_by_side_cards(owner)
+    cards = owner.cards
+    images = cards.map(&:image)
+
+    0.upto(4) do |line|
+      row = images.map do |img|
+        img[line]
+      end.join("  ")
+      puts row
+    end
   end
 end
 
@@ -45,9 +49,7 @@ class Participant
 
   def show_hand
     puts "#{name}:"
-    cards.each do |card|
-      puts card_image(card.suit, card.face)
-    end
+    side_by_side_cards(self)
     puts "=> Total: #{total}"
     puts ""
   end
@@ -147,14 +149,14 @@ class Dealer < Participant
   end
 
   def turn(deck)
+    cards.each(&:unhide!)
     display_turn
-    loop do
+    until busted?
       if total >= 17 && !busted?
         stay
         break
       else
         hit(deck)
-        break if busted?
       end
     end
   end
@@ -186,11 +188,37 @@ end
 class Card
   SUITS = %w(♥ ♦ ♣ ♠)
   FACES = %w(2 3 4 5 6 7 8 9 10 J Q K A)
-  attr_reader :face, :suit
+
+  attr_reader :hidden
 
   def initialize(suit, face)
     @suit = suit
     @face = face
+    @hidden = false
+  end
+
+  def image
+    ["+------+",
+     "|    #{suit} |",
+     "|      |",
+     "| #{face.length > 1 ? face : face + ' '}   |",
+     '+------+']
+  end
+
+  def suit
+    hidden ? "?" : @suit
+  end
+
+  def face
+    hidden ? "?" : @face
+  end
+
+  def hide!
+    @hidden = true
+  end
+
+  def unhide!
+    @hidden = false
   end
 
   def to_s
@@ -239,16 +267,18 @@ class Round
     puts frame('Score Board', scores, 28)
   end
 
+  def dealer_initial_card
+    dealer.cards[1].hide!
+    puts "#{dealer.name}:"
+    side_by_side_cards(dealer)
+    puts ""
+  end
+
   def show_initial_cards
     puts "#{player.name}:"
-    player.cards.each do |card|
-      puts card_image(card.suit, card.face)
-    end
+    side_by_side_cards(player)
     puts "=> Your total now: #{player.total}"
-    puts "#{dealer.name}:"
-    puts card_image(dealer.cards[0].suit, dealer.cards[0].face)
-    puts card_image("?", "?")
-    puts ""
+    dealer_initial_card
   end
 
   private
