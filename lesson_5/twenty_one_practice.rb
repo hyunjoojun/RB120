@@ -1,11 +1,8 @@
 require 'pry'
 
 module Displayable
-  def frame(title, texts, size)
-    [" - - - - #{title} - - - - ",
-     " #{texts[0]} ".center(size),
-     " #{texts[1]} ".center(size),
-     ' - - - - - - - - - - - - - -']
+  def clear
+    system 'clear'
   end
 
   def side_by_side_cards(owner)
@@ -18,6 +15,10 @@ module Displayable
       end.join("  ")
       puts row
     end
+  end
+
+  def display_goodbye_message
+    puts "Thank you for playing Twenty-One. Goodbye!"
   end
 end
 
@@ -264,7 +265,7 @@ class Round
   def display_scores
     scores = ["#{player.name} : #{player.score}",
               "#{dealer.name} : #{dealer.score}"]
-    puts frame('Score Board', scores, 28)
+    puts score_board(scores, 28)
   end
 
   def dealer_initial_card
@@ -282,6 +283,13 @@ class Round
   end
 
   private
+
+  def score_board(texts, size)
+    [" - - - - Score Board - - - - ",
+     " #{texts[0]} ".center(size),
+     " #{texts[1]} ".center(size),
+     ' - - - - - - - - - - - - - -']
+  end
 
   def main_game
     deal_cards
@@ -363,10 +371,11 @@ class Round
 end
 
 class TwentyOneGame
+  include Displayable
   attr_reader :rounds, :player, :dealer
 
   def initialize
-    system 'clear'
+    clear
     @rounds = []
     @player = Player.new
     @dealer = Dealer.new
@@ -390,19 +399,15 @@ class TwentyOneGame
     puts ""
   end
 
-  def display_goodbye_message
-    puts "Thank you for playing Twenty-One. Goodbye!"
-  end
-
   def start_round
-    system 'clear'
+    clear
     round = Round.new(@player, @dealer)
     round.start
     @rounds << round
   end
 
   def display_final_scores
-    system 'clear'
+    clear
     rounds.last.display_scores
   end
 
