@@ -16,4 +16,4 @@ small_car.go_fast
 
 # We have a Car object that's referenced by small_car variable.
 # We call go_fast method on the small_car object and this prints out the string.
-# self.class is small_car's class which is Car so Car gets printed out.
+# self.class inside of the instance method go_fast prints out the instance's class name.
