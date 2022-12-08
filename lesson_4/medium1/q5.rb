@@ -1,13 +1,15 @@
 class KrispyKreme
+  attr_reader :filling_type, :glazing
+
   def initialize(filling_type, glazing)
     @filling_type = filling_type
     @glazing = glazing
   end
 
   def to_s
-    filling_string = @filling_type ? @filling_type : 'Plain'
-    glazing_string = @glazing ? " with #{@glazing}" : ''
-    filling_string + glazing_string
+    filling_str = filling_type || 'Plain'
+    glazing_str = glazing ? " with #{glazing}" : ''
+    filling_str + glazing_str
   end
 end
 
